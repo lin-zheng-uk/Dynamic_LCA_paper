@@ -55,6 +55,7 @@ options(width=100)
 S <- summary(object = results, k = 10, pause = FALSE)
 S$MainInformationDF
 
+
 # ------check summary for three methods separately
 results_BIM <- biblioAnalysis(M_BIM, sep = ";")
 options(width=100)
@@ -71,17 +72,46 @@ options(width=100)
 S_GIS <- summary(object = results_GIS, k = 10, pause = FALSE)
 S_GIS$MainInformationDF
 
-# ------check ciations
+# ------get the total number of publicans in each year
+total_publications_all <- S$AnnualProduction
+total_publications_all <- data.frame(Year = total_publications_all$Year, Total_Publications_All = total_publications_all$Articles)
 
+total_publications_BIM <- S_BIM$AnnualProduction
+total_publications_BIM <- data.frame(Year = total_publications_BIM$Year, Total_Publications_BIM = total_publications_BIM$Articles)
+
+total_publications_ML <- S_ML$AnnualProduction
+total_publications_ML <- data.frame(Year = total_publications_ML$Year, Total_Publications_ML = total_publications_ML$Articles)
+
+total_publications_GIS <- S_GIS$AnnualProduction
+total_publications_GIS <- data.frame(Year = total_publications_GIS$Year, Total_Publications_GIS = total_publications_GIS$Articles)
+total_publications_GIS
+
+# merge: Combine all dataframes into one
+years_df <- data.frame(Year = 2007:2024)
+total_publications <- merge(years_df, total_publications_all, by = "Year", all = TRUE)
+total_publications <- merge(total_publications, total_publications_BIM, by = "Year", all = TRUE)
+total_publications <- merge(total_publications, total_publications_ML, by = "Year", all = TRUE)
+total_publications <- merge(total_publications, total_publications_GIS, by = "Year", all = TRUE)
+# Replace NA with 0
+total_publications[is.na(total_publications)] <- 0
+# Convert numeric columns to integers
+total_publications$Total_Publications_ML <- as.integer(total_publications$Total_Publications_ML)
+total_publications$Total_Publications_GIS <- as.integer(total_publications$Total_Publications_GIS)
+colnames(total_publications) <- c("Year", "Total_Publications_All", "Total_Publications_BIM", "Total_Publications_ML", "Total_Publications_GIS")
+print(total_publications)
+# save results as csv
+write.csv(total_publications, file = "./Generated_Data_table/total_number_of_publications_each_year.csv", row.names = FALSE)
+
+# ------check ciations
 # Extract years and the yearly average number of times each manuscript has been cited
 years <- results$Years
 citations <- results$TotalCitation
 # Combine years and average_citations_per_paper_per_year
 citation_data <- data.frame(Year = years, TotalCitations = citations)
 # Summarize total citations for each year
-total_citations_per_paper_per_year <- aggregate(TotalCitations ~ Year, data = citation_data, sum)
+total_citations_per_year_all <- aggregate(TotalCitations ~ Year, data = citation_data, sum)
 # Print the result
-print(total_citations_per_paper_per_year)
+print(total_citations_per_year_all)
 
 years_BIM <- results_BIM$Years
 citations_BIM <- results_BIM$TotalCitation
@@ -109,6 +139,23 @@ citation_data_GIS <- data.frame(Year = years_GIS, TotalCitations = citations_GIS
 total_citations_per_paper_per_year_GIS <- aggregate(TotalCitations ~ Year, data = citation_data_GIS, sum)
 # Print the result
 print(total_citations_per_paper_per_year_GIS)
+
+# merge: Combine all dataframes into one
+years_df <- data.frame(Year = 2007:2024)
+total_citations_per_year <- merge(years_df, total_citations_per_year_all, by = "Year", all = TRUE)
+colnames(total_citations_per_year) <- c("Year", "TotalCitations_All")
+total_citations_per_year <- merge(total_citations_per_year, total_citations_per_paper_per_year_BIM, by = "Year", all = TRUE)
+colnames(total_citations_per_year) <- c("Year", "TotalCitations_All", "TotalCitations_BIM")
+total_citations_per_year <- merge(total_citations_per_year, total_citations_per_paper_per_year_ML, by = "Year", all = TRUE)
+colnames(total_citations_per_year) <- c("Year", "TotalCitations_All", "TotalCitations_BIM", "TotalCitations_ML")
+total_citations_per_year <- merge(total_citations_per_year, total_citations_per_paper_per_year_GIS, by = "Year", all = TRUE)
+colnames(total_citations_per_year) <- c("Year", "TotalCitations_All", "TotalCitations_BIM", "TotalCitations_ML", "TotalCitations_GIS")
+# Replace NA with 0
+total_citations_per_year[is.na(total_citations_per_year)] <- 0
+print(total_citations_per_year)
+# save results as csv
+write.csv(total_citations_per_year, file = "./Generated_Data_table/total_number_of_citations_each_year.csv", row.names = FALSE)
+
 
 # ------check most citations paper/ instiuation and save results as csv
 S$MostCitedPapers
