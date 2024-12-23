@@ -12,26 +12,26 @@ library(igraph)
 # set the working directory
 setwd("/Users/lin/Dev/Dynamic_LCA_paper")
 # Converting collection into a bibliographic dataframe
-M_BIM <- convert2df(file = 'selection_WOS_BIM.bib', dbsource = "isi", format = "bibtex")
-M_ML <- convert2df(file = 'selection_WOS_ML.bib', dbsource = "isi", format = "bibtex")
-M_GIS <- convert2df(file = 'selection_WOS_GIS.bib', dbsource = "isi", format = "bibtex")
+M_BIM <- convert2df(file = './Article_selection_Wos_Scopus/selection_WOS_BIM.bib', dbsource = "isi", format = "bibtex")
+M_ML <- convert2df(file = './Article_selection_Wos_Scopus/selection_WOS_ML.bib', dbsource = "isi", format = "bibtex")
+M_GIS <- convert2df(file = './Article_selection_Wos_Scopus/selection_WOS_GIS.bib', dbsource = "isi", format = "bibtex")
 
 # merge the three dataframes
 M <- merge(merge(M_BIM, M_GIS, all = TRUE), M_ML, all = TRUE)
 # save the merged table as csv into the current working directory, M=Table: 489*57
-write.csv(M, file = '/Users/lin/Dev/Dynamic_LCA_paper/overall_wos_selection.csv', row.names = TRUE)
+write.csv(M, file = './Generated_Data_table/overall_wos_selection.csv', row.names = TRUE)
 
 #-----validation the WOS results by scopus results-----
 # validation the WOS results by scopus, check whether the selected articles are in the scopus database, using DOI as the key
 # import csv files from scopus database
-M_BIM_scopus <- read.csv("scopus_BIM.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
-M_ML_scopus <- read.csv("scopus_ML.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
-M_GIS_scopus <- read.csv("scopus_GIS.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+M_BIM_scopus <- read.csv("./Article_selection_Wos_Scopus/scopus_BIM.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+M_ML_scopus <- read.csv("./Article_selection_Wos_Scopus/scopus_ML.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+M_GIS_scopus <- read.csv("./Article_selection_Wos_Scopus/scopus_GIS.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 # merge the scopus dataframes, M_scopus=Table: 346*36
 M_scopus <- merge(merge(M_BIM_scopus, M_ML_scopus, all = TRUE), M_GIS_scopus, all = TRUE)
 # import the WOS dataframes
-M_wos <- read.csv("overall_wos_selection.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+M_wos <- read.csv("./Generated_Data_table/overall_wos_selection.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 # rename columns name in the scopus dataframe to match the WOS dataframe
 colnames(M_scopus)[colnames(M_scopus) == "Title"] <- "TI"
@@ -42,7 +42,10 @@ M_scopus <- M_scopus[!is.na(M_scopus$TI), ]
 M_scopus <- M_scopus[!grepl("REVIEW", M_scopus$TI), ]
 # check whether there are articles in the scopus database but not in the WOS database, by key "TI" or "DI", either TI or DI can be used as the key
 M_scopus_not_in_wos <- M_scopus[!(M_scopus$DI %in% M_wos$DOI), ]
-# so we can see M_scopus_not_in_wos=Table: 0*36, which means all the articles in the scopus database are in the WOS database.
+# print the row number of the M_scopus_not_in_wos, so we can see how many articles in the scopus database are not in the WOS database
+print(dim(M_scopus_not_in_wos))
+# so we can see M_scopus_not_in_wos contains 0 rows, which means all the articles in the scopus database are in the WOS database.
+
 
 # continue using the WOS dataframes to conduct the bibliometric analysis
 
