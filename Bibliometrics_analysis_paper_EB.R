@@ -11,10 +11,12 @@ library(igraph)
 
 # set the working directory
 setwd("/Users/lin/Dev/Dynamic_LCA_paper")
-# Converting collection into a bibliographic dataframe, check the number of rows and columns in the dataframe
-# and check the min and max value in column "PY" (year) in the dataframe to validate the database
 
-#BIM
+# import raw data that exported from the WOS database
+# Converting collection into a bibliographic dataframe, check the number of rows and columns in the dataframe
+# check the min and max value in column "PY" (year) in the dataframe to validate the collection
+
+# BIM
 M_BIM <- convert2df(file = './Article_selection_Wos_Scopus/selection_WOS_BIM.bib', dbsource = "isi", format = "bibtex")
 print(dim(M_BIM))
 #print the min and max value in column "PY" in the dataframe M_BIM
@@ -42,7 +44,7 @@ print(max(M_GIS$PY))
 # Binding rows and tagging them
 M <- bind_rows(M_BIM, M_ML, M_GIS, .id = "source")
 print(dim(M))
-# save the merged table as csv into the current working directory, M=Table: 511*58
+# save the merged table as csv into the current working directory, M=Table: 474*58
 write.csv(M, file = './Generated_Data_table/overall_wos_selection.csv', row.names = TRUE)
 
 # Now df_combined includes a 'source' column indicating the origin of each row
@@ -51,18 +53,19 @@ print(dim(M_no_duplicates))
 number_of_duplicates <- nrow(M) - nrow(M_no_duplicates)
 print(paste('Number of duplicates:', number_of_duplicates))
 
-#-----validation the WOS results by scopus results-----
+#-----validation the WOS results by scopus results, use "Ttitle" as key-----
 # validation the WOS results by scopus, check whether the selected articles are in the scopus database, using DOI as the key
 # import csv files from scopus database
 M_BIM_scopus <- read.csv("./Article_selection_Wos_Scopus/scopus_BIM.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 M_ML_scopus <- read.csv("./Article_selection_Wos_Scopus/scopus_ML.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 M_GIS_scopus <- read.csv("./Article_selection_Wos_Scopus/scopus_GIS.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
-# merge the scopus dataframes, M_scopus=Table: 346*36, 346 articles in total, contains 36 columns information
+# merge the scopus dataframes
 M_scopus <- merge(merge(M_BIM_scopus, M_ML_scopus, all = TRUE), M_GIS_scopus, all = TRUE)
-# import the WOS dataframes, M_wos=Table: 489*57, 489 articles in total, contains 57 columns information
+print(dim(M_scopus)) # M_scopus=Table: 311*36, 311 articles in total, contains 36 columns information
+# import the WOS dataframes
 M_wos <- read.csv("./Generated_Data_table/overall_wos_selection.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
-print(dim(M_wos))
+print(dim(M_wos)) # same as above, M_wos=Table: 474*59, 474 articles in total, contains 58 columns information and 1 column "source"
 
 # rename columns name in the scopus dataframe to match the WOS dataframe
 colnames(M_scopus)[colnames(M_scopus) == "Title"] <- "TI"
@@ -70,6 +73,7 @@ colnames(M_scopus)[colnames(M_scopus) == "Title"] <- "TI"
 M_scopus$TI <- toupper(M_scopus$TI)
 # delete the rows with missing values in the column "TI"
 M_scopus <- M_scopus[!is.na(M_scopus$TI), ]
+print(dim(M_scopus))
 # check whether there are articles in the scopus database but not in the WOS database, by key "TI" or "DI"; either TI or DI can be used as the key
 M_scopus_not_in_wos <- M_scopus[!(M_scopus$DI %in% M_wos$DOI), ]
 # print the row number of the M_scopus_not_in_wos, so we can see how many articles in the scopus database are not in the WOS database
