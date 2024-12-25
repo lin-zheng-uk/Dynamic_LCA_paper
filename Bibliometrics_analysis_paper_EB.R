@@ -8,6 +8,8 @@ install.packages('ggplot2')
 library(ggplot2)
 library(dplyr)
 library(igraph)
+install.packages('gridExtra')
+library(gridExtra)
 
 # set the working directory
 setwd("/Users/lin/Dev/Dynamic_LCA_paper")
@@ -101,7 +103,7 @@ M_GIS <- M_GIS_final # update the ML dataframe
 M_final <- bind_rows(M_BIM, M_ML, M_GIS, .id = "source")
 print(dim(M_final))
 # save the merged table as csv into the current working directory, M=Table: 474*58
-write.csv(M_final, file = './Generated_Data_table/overall_wos_selection.csv', row.names = TRUE)
+write.csv(M_final, file = './Generated_Data_table/overall_articles_selection.csv', row.names = TRUE)
 
 
 # ------ Uising final completed dataframes to conduct the bibliometric method to generated the dataset we need ------
@@ -252,3 +254,54 @@ S_ML$MostRelSources
 write.csv(S_ML$MostRelSources, file = "./Generated_Data_table/top_journals_ML.csv", row.names = FALSE)
 S_GIS$MostRelSources
 write.csv(S_GIS$MostRelSources, file = "./Generated_Data_table/top_journals_GIS.csv", row.names = FALSE)
+
+# ---- Bibliometrics_analysis ---- generate the plots for added sections in the paper----- for actionable insights
+# reference: https://rforanalytics.com/06-method3.html
+library(bibliometrix)
+install.packages('pander')
+library(pander)
+library(knitr)
+install.packages('kableExtra')
+library(kableExtra)
+library(bibliometrixData)
+
+# Load the data
+M <- M_final
+print(dim(M))
+# Conducting bibliometric analysis
+# Descriptive analysis
+res1 = biblioAnalysis(M, sep = ";")
+s1 = summary(res1, k = 10, pause = FALSE, verbose = FALSE)
+
+d1 = s1$MainInformationDF  #main information
+d2 = s1$MostProdAuthors  #Most productive Authors
+d3 = s1$MostCitedPapers  #most cited papers
+pander(d1, caption = "Summary Information")
+
+# Information Plot
+p1 = plot(res1, pause = FALSE)
+# summary plot
+theme_set(theme_bw())
+p1[[1]] + theme_bw() + scale_x_discrete(limits = rev(levels(as.factor(p1[[1]]$data$AU))))
+# most productive countries
+p1[[2]]
+# Annual Scientific Production
+p1[[3]]
+# Average citations per year
+p1[[4]]
+
+# Sankey Plot
+M_distinct <- M_final[!duplicated(M_final$TI), ]
+threeFieldsPlot(M_distinct, fields = c("ID", "AU", "AU_CO")) # ID: key words plus, AU: author, AU_CO: country
+
+# author collaboration
+Netmatrix2 = biblioNetwork(M_distinct, analysis = "co-occurrences", network = "keywords",
+                           sep = ";")
+# Plot the network
+net = networkPlot(Netmatrix2, normalize = "association", weighted = T, n = 50, Title = "Keyword Co-occurrences",
+                  type = "fruchterman", size = T, edgesize = 5, labelsize = 0.7)
+
+# thematic map *
+Map = thematicMap(M_distinct, field = "ID", n = 1000, minfreq = 5, stemming = FALSE, size = 0.5,
+                  n.labels = 4, repel = TRUE)
+plot(Map$map)
