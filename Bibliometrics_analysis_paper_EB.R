@@ -138,6 +138,11 @@ S_GIS$MainInformationDF
 # print annual growth rate
 S_GIS$AnnualGrowth
 
+# generae a table to show the annual growth rate for three methods
+annual_growth_rate <- data.frame(Methods = c("BIM-LC", "ML-LC", "GIS-LC"), Annual_Growth_Rate = c(S_BIM$AnnualGrowth, S_ML$AnnualGrowth, S_GIS$AnnualGrowth))
+annual_growth_rate
+# save the results as csv
+write.csv(annual_growth_rate, file = "./Generated_Data_table/annual_growth_rate.csv", row.names = FALSE)
 
 # ------get the total number of publicans in each year
 total_publications_all <- S$AnnualProduction
@@ -305,3 +310,7 @@ net = networkPlot(Netmatrix2, normalize = "association", weighted = T, n = 50, T
 Map = thematicMap(M_distinct, field = "ID", n = 1000, minfreq = 5, stemming = FALSE, size = 0.5,
                   n.labels = 4, repel = TRUE)
 plot(Map$map)
+
+p_map <- plot(Map$map, type = "bubble", size = 0.5, n.labels = 4, repel = TRUE)
+p_map
+ggsave("./Figures/thematic_map.png.pdf", p_map, width = 10, height = 8, units = "in",bg = "white",dpi=300)
