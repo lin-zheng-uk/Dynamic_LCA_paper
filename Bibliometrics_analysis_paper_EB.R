@@ -92,8 +92,8 @@ print(dim(M_GIS_scopus))
 # Checking entries where either title or DOI does not match
 M_scopus_not_in_wos_GIS <- M_GIS_scopus[!((M_GIS_scopus$TI %in% M_GIS_wos$TI) | (M_GIS_scopus$DI %in% M_GIS_wos$DI)), ]
 print(dim(M_scopus_not_in_wos_GIS))
-# the results show that M_scopus_not_in_wos contains 7 rows, which means 7 articles in the scopus database but not included in the WOS database.
-# add these 7 articles into the final ML dataframe
+# the results show that M_scopus_not_in_wos contains 3 rows, which means 3 articles in the scopus database but not included in the WOS database.
+# add these 3 articles into the final ML dataframe
 M_GIS_final <- bind_rows(M_GIS_wos, M_scopus_not_in_wos_GIS,.id = "source")
 print(dim(M_GIS_final)) # 20+3=23
 M_GIS <- M_GIS_final # update the ML dataframe
@@ -170,7 +170,7 @@ total_publications$Total_Publications_ML <- as.integer(total_publications$Total_
 total_publications$Total_Publications_GIS <- as.integer(total_publications$Total_Publications_GIS)
 colnames(total_publications) <- c("Year", "Total_Publications_All", "Total_Publications_BIM", "Total_Publications_ML", "Total_Publications_GIS")
 print(total_publications)
-# save results as csv (data used for figure 1,2,3 in the paper)
+# save results as csv
 write.csv(total_publications, file = "./Generated_Data_table/total_number_of_publications_each_year.csv", row.names = FALSE)
 
 # ------check ciations
@@ -224,11 +224,11 @@ colnames(total_citations_per_year) <- c("Year", "TotalCitations_All", "TotalCita
 # Replace NA with 0
 total_citations_per_year[is.na(total_citations_per_year)] <- 0
 print(total_citations_per_year)
-# save results as csv, (data used for figure 1,2,3 in the paper)
+# save results as csv
 write.csv(total_citations_per_year, file = "./Generated_Data_table/total_number_of_citations_each_year.csv", row.names = FALSE)
 
 
-# ------check most citations paper and save results as csv (data used for table 2 in the paper)
+# ------check most citations paper and save results as csv
 S_BIM$MostCitedPapers
 write.csv(S_BIM$MostCitedPapers, file = "./Generated_Data_table/top_cited_publications_BIM.csv", row.names = FALSE)
 S_ML$MostCitedPapers
@@ -236,7 +236,7 @@ write.csv(S_ML$MostCitedPapers, file = "./Generated_Data_table/top_cited_publica
 S_GIS$MostCitedPapers
 write.csv(S_GIS$MostCitedPapers, file = "./Generated_Data_table/top_cited_publications_GIS.csv", row.names = FALSE)
 
-# ------check most productive countries and save results as csv （data used for table 1 in the paper)
+# ------check most productive countries and save results as csv
 S_BIM$MostProdCountries
 write.csv(S_BIM$MostProdCountries, file = "./Generated_Data_table/country_collaboration_BIM.csv", row.names = FALSE)
 S_ML$MostProdCountries
@@ -244,7 +244,7 @@ write.csv(S_ML$MostProdCountries, file = "./Generated_Data_table/country_collabo
 S_GIS$MostProdCountries
 write.csv(S_GIS$MostProdCountries, file = "./Generated_Data_table/country_collaboration_GIS.csv", row.names = FALSE)
 
-# ------check citations of countries and save results as csv （data used for figure 4 in the paper)
+# ------check citations of countries and save results as csv
 S_BIM$TCperCountries
 write.csv(S_BIM$TCperCountries, file = "./Generated_Data_table/country_citations_BIM.csv", row.names = FALSE)
 S_ML$TCperCountries
@@ -252,65 +252,10 @@ write.csv(S_ML$TCperCountries, file = "./Generated_Data_table/country_citations_
 S_GIS$TCperCountries
 write.csv(S_GIS$TCperCountries, file = "./Generated_Data_table/country_citations_GIS.csv", row.names = FALSE)
 
-# -------- check the publishers and save results as csv （data used for figure 5 in the paper)
+# -------- check the publishers and save results as csv
 S_BIM$MostRelSources
 write.csv(S_BIM$MostRelSources, file = "./Generated_Data_table/top_journals_BIM.csv", row.names = FALSE)
 S_ML$MostRelSources
 write.csv(S_ML$MostRelSources, file = "./Generated_Data_table/top_journals_ML.csv", row.names = FALSE)
 S_GIS$MostRelSources
 write.csv(S_GIS$MostRelSources, file = "./Generated_Data_table/top_journals_GIS.csv", row.names = FALSE)
-
-# ---- Bibliometrics_analysis ---- generate the plots for added sections in the paper----- for actionable insights
-# reference: https://rforanalytics.com/06-method3.html
-library(bibliometrix)
-install.packages('pander')
-library(pander)
-library(knitr)
-install.packages('kableExtra')
-library(kableExtra)
-library(bibliometrixData)
-
-# Load the data
-M <- M_final
-print(dim(M))
-# Conducting bibliometric analysis
-# Descriptive analysis
-res1 = biblioAnalysis(M, sep = ";")
-s1 = summary(res1, k = 10, pause = FALSE, verbose = FALSE)
-
-d1 = s1$MainInformationDF  #main information
-d2 = s1$MostProdAuthors  #Most productive Authors
-d3 = s1$MostCitedPapers  #most cited papers
-pander(d1, caption = "Summary Information")
-
-# Information Plot
-p1 = plot(res1, pause = FALSE)
-# summary plot
-theme_set(theme_bw())
-p1[[1]] + theme_bw() + scale_x_discrete(limits = rev(levels(as.factor(p1[[1]]$data$AU))))
-# most productive countries
-p1[[2]]
-# Annual Scientific Production
-p1[[3]]
-# Average citations per year
-p1[[4]]
-
-# Sankey Plot
-M_distinct <- M_final[!duplicated(M_final$TI), ]
-threeFieldsPlot(M_distinct, fields = c("ID", "AU", "AU_CO")) # ID: key words plus, AU: author, AU_CO: country
-
-# author collaboration
-Netmatrix2 = biblioNetwork(M_distinct, analysis = "co-occurrences", network = "keywords",
-                           sep = ";")
-# Plot the network
-net = networkPlot(Netmatrix2, normalize = "association", weighted = T, n = 50, Title = "Keyword Co-occurrences",
-                  type = "fruchterman", size = T, edgesize = 5, labelsize = 0.7)
-
-# thematic map *
-Map = thematicMap(M_distinct, field = "ID", n = 1000, minfreq = 5, stemming = FALSE, size = 0.5,
-                  n.labels = 4, repel = TRUE)
-plot(Map$map)
-
-p_map <- plot(Map$map, type = "bubble", size = 0.5, n.labels = 4, repel = TRUE)
-p_map
-ggsave("./Figures/thematic_map.png.pdf", p_map, width = 10, height = 8, units = "in",bg = "white",dpi=300)

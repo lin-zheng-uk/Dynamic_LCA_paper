@@ -260,14 +260,21 @@ print(p_h)
 
 p_a #
 p_b #
-p_c #
+p_f #
+p_h #
+
+# supplementary figures
 p_d
 p_e
-p_f
+p_c
 p_g
-p_h #
 
 # combine and save the figures
 p_figure_combined_1 <- ggarrange(p_a, p_b,p_h,p_f, ncol = 2, nrow = 2, labels = c("(a)", "(b)","(c)", "(d)") )
 print(p_figure_combined_1)
 ggsave("./Figures/figure1.pdf", p_figure_combined_1, width = 10, height = 8, units = "in",bg = "white",dpi=300)
+
+# combine and save the supplementary figures
+p_figure_combined_2 <- ggarrange(p_c,p_g,p_e, p_d, ncol = 2, nrow = 2, labels = c("(a)", "(b)","(c)", "(d)") )
+print(p_figure_combined_2)
+ggsave("./Figures/figureS1_SMs.pdf", p_figure_combined_2, width = 10, height = 8, units = "in",bg = "white",dpi=300)
