@@ -2,6 +2,8 @@
 
 This repository is established for the systematic literature selection and analysis conducted for the paper "A Review of Buildings Dynamic Life Cycle Studies by Bibliometric Methods".
 
+https://www.sciencedirect.com/science/article/pii/S0378778825001835?via%3Dihub
+
 ## Repository Overview
 
 The repository includes various folders and scripts, each serving a specific purpose in the analysis and manuscript preparation process.
